@@ -144,6 +144,12 @@ module DBF
       end
     end
     
+    def dm_properties()
+      columns.map do |column|
+        "  property #{column.dm_schema_definition}"
+      end.join("\n")
+    end
+    
     # Returns the record at <tt>index</tt> by seeking to the record in the
     # physical database file. See the documentation for the records method for
     # information on how these two methods differ.

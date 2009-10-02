@@ -5,12 +5,14 @@ require 'dbf'
 
 $a ||= false
 $s ||= false
+$d ||= false
 
 if defined? $h then
-  puts "usage: #{File.basename(__FILE__)} [-h|-s|-a] filename"
+  puts "usage: #{File.basename(__FILE__)} [-h|-s|-a|-d] filename [connection_string]"
   puts "  -h = print this message"
   puts "  -s = print summary information"
   puts "  -a = create an ActiveRecord::Schema"
+  puts "  -d = create table and insert new rows into db"
 else
 
   filename = ARGV.shift
@@ -35,6 +37,29 @@ else
     puts "-" * 78
     table.columns.each do |f|
       puts "%-16s %-10s %-10s %-10s" % [f.name, f.type, f.length, f.decimal]
+    end
+  end
+  
+  if $d
+    connection_string = ARGV.shift
+    abort "You must specify connection_string to import data into DB" unless connection_string
+    require 'dm-core'
+    DataMapper.setup(:default, connection_string)
+
+    table = DBF::Table.new filename
+    Class_name = File.basename(filename.capitalize, '.dbf')
+    klass = self.class.const_set(Class_name, Class.new() do
+      include DataMapper::Resource
+      def self.storage_name(_) Class_name.downcase end
+      property :id_key, Integer, :serial => true
+      eval(table.dm_properties)
+    end)
+    DataMapper.auto_upgrade!
+    count = table.record_count
+    @i = 0
+    table.each do |record|
+      print("\r%d / %d" % [@i, count]) if (@i += 1) % 100 == 0
+      klass.create(record.attributes)
     end
   end
 end

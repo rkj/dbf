@@ -66,6 +66,30 @@ module DBF
       "\"#{name.underscore}\", #{data_type}\n"
     end
     
+    def dm_schema_definition
+      data_type = case type
+      when "N" # number
+        if decimal > 0
+          "Float"
+        else
+          "Integer"
+        end
+      when "I" # integer
+        "Integer"
+      when "D" # date
+        "Date"
+      when "T" # datetime
+        "DateTime"
+      when "L" # boolean
+        "Boolean"
+      when "M" # memo
+        "String"
+      else
+        "String, :length => #{length}"
+      end
+      %{:#{name.underscore}, #{data_type}}
+    end
+    
     # strip all non-ascii and non-printable characters
     def strip_non_ascii_chars(s)
       # truncate the string at the first null character
