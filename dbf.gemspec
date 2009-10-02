@@ -1,4 +1,3 @@
-(in /Volumes/Users/rkj/MyDocuments/github/dbf)
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
