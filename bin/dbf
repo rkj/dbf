@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -ws
+#!/usr/bin/env ruby -s
 
 require 'rubygems'
 require 'dbf'
@@ -51,14 +51,15 @@ else
     klass = self.class.const_set(Class_name, Class.new() do
       include DataMapper::Resource
       def self.storage_name(_) Class_name.downcase end
-      property :id_key, Integer, :serial => true
+        property :id_key, DataMapper::Types::Serial
       eval(table.dm_properties)
     end)
     DataMapper.auto_upgrade!
     count = table.record_count
-    @i = 0
+    @i = -1
+    puts "Inserting data"
     table.each do |record|
-      print("\r%d / %d" % [@i, count]) if (@i += 1) % 100 == 0
+      print("\rRows %d of %d inserted" % [@i, count]) or STDOUT.flush if (@i += 1) % 100 == 0
       klass.create(record.attributes)
     end
   end
