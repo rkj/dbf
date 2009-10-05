@@ -51,7 +51,7 @@ else
     klass = self.class.const_set(Class_name, Class.new() do
       include DataMapper::Resource
       def self.storage_name(_) Class_name.downcase end
-        property :id_key, DataMapper::Types::Serial
+      property :id_key, DataMapper::Types::Serial
       eval(table.dm_properties)
     end)
     DataMapper.auto_upgrade!

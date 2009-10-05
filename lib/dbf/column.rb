@@ -81,7 +81,7 @@ module DBF
       when "T" # datetime
         "DateTime"
       when "L" # boolean
-        "Boolean"
+        "DataMapper::Types::Boolean"
       when "M" # memo
         "String"
       else
