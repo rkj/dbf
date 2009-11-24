@@ -14,12 +14,7 @@ module DBF
     end
     
     def to_a
-      columns.map do |column|
-        underscored_column_name = column.name.underscore
-        value = @attributes[column.name.underscore]
-        
-        value.is_a?(String) ? value.strip : value
-      end
+      columns.map { |column| @attributes[column.name.underscore] }
     end
     
     private
@@ -38,22 +33,18 @@ module DBF
     def initialize_values
       @attributes = columns.inject({}) do |hash, column|
         if column.type == 'M'
-          starting_block = unpack_string(column).to_i
+          starting_block = unpack_data(column.length).to_i
           hash[column.name.underscore] = read_memo(starting_block)
         else
-          value = unpack_column(column)
+          value = unpack_data(column.length)
           hash[column.name.underscore] = column.type_cast(value)
         end
         hash
       end
     end
   
-    def unpack_column(column)
-      @data.read(column.length).to_s.unpack("a#{column.length}")
-    end
-  
-    def unpack_string(column)
-      unpack_column(column).to_s
+    def unpack_data(length)
+      @data.read(length).unpack("a#{length}").first
     end
   
     def read_memo(start_block)
@@ -65,7 +56,7 @@ module DBF
     def build_fpt_memo(start_block)
       @memo.seek(start_block * memo_block_size)
       
-      memo_type, memo_size, memo_string = @memo.read(memo_block_size).unpack("NNa56")
+      memo_type, memo_size, memo_string = @memo.read(memo_block_size).unpack("NNa*")
       return nil unless memo_type == 1 and memo_size > 0
       
       if memo_size > memo_block_content_size
@@ -83,7 +74,8 @@ module DBF
       when "83" # dbase iii
         memo_string = ""
         loop do
-          memo_string << block = @memo.read(memo_block_size)
+          block = @memo.read(memo_block_size)
+          memo_string << block
           break if block.rstrip.size < memo_block_size
         end
       when "8b" # dbase iv
